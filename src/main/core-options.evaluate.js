@@ -113,6 +113,7 @@ const options = {
       { value: "acorn", description: "JavaScript" },
       { value: "espree", description: "JavaScript" },
       { value: "meriyah", description: "JavaScript" },
+      { value: "oxc", description: "JavaScript" },
       { value: "css", description: "CSS" },
       { value: "less", description: "Less" },
       { value: "scss", description: "SCSS" },

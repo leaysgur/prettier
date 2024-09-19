@@ -13,6 +13,7 @@ const languages = [
       "babel-ts",
       "flow",
       "typescript",
+      "oxc",
     ],
     vscodeLanguageIds: ["javascript", "mongo"],
     interpreters: [
@@ -45,6 +46,7 @@ const languages = [
       "typescript",
       "espree",
       "meriyah",
+      "oxc",
     ],
     vscodeLanguageIds: ["javascriptreact"],
     aliases: undefined,
