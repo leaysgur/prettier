@@ -202,15 +202,15 @@ function handleIfStatementComments({
     if (precedingNode.type === "BlockStatement") {
       addTrailingComment(precedingNode, comment);
     } else {
-      const isSingleLineComment =
-        isLineComment(comment) ||
-        comment.loc.start.line === comment.loc.end.line;
-      const isSameLineComment =
-        comment.loc.start.line === precedingNode.loc.start.line;
-      if (isSingleLineComment && isSameLineComment) {
+      const isSameLineComment = !hasNewlineInRange(
+        text,
+        locEnd(precedingNode),
+        locEnd(comment),
+      );
+      if (isSameLineComment) {
         // example:
         //   if (cond1) expr1; // comment A
-        //   else if (cond2) expr2; // comment A
+        //   else if (cond2) expr2; /* comment B */
         //   else expr3;
         addTrailingComment(precedingNode, comment);
       } else {
@@ -1024,6 +1024,7 @@ function handleCommentsInDestructuringPattern({
 
 function handleLastBinaryOperatorOperand({
   comment,
+  text,
   precedingNode,
   enclosingNode,
   followingNode,
@@ -1044,13 +1045,15 @@ function handleLastBinaryOperatorOperand({
     //   !(
     //     (cond1 || cond2) // foo
     //   );
-    const isMultilineExpression =
-      enclosingNode.argument.loc?.start.line !==
-      precedingNode.right.loc.start.line;
+    const isMultilineExpression = hasNewlineInRange(
+      text,
+      locStart(enclosingNode.argument),
+      locStart(precedingNode.right),
+    );
     const isSingleLineComment =
-      isLineComment(comment) || comment.loc.start.line === comment.loc.end.line;
+      !hasNewlineInRange(text, locStart(comment), locEnd(comment));
     const isSameLineComment =
-      comment.loc.start.line === precedingNode.right.loc.start.line;
+      !hasNewlineInRange(text, locStart(precedingNode.right), locStart(comment));
 
     if (isMultilineExpression && isSingleLineComment && isSameLineComment) {
       addTrailingComment(precedingNode.right, comment);
