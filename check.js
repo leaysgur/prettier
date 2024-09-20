@@ -2,26 +2,46 @@ import fastGlob from "fast-glob";
 import { readFile } from "node:fs/promises";
 import * as Prettier from "./src/index.js";
 
-const jsFiles = await fastGlob([
-  "./tests/format/js/**/*.js",
-  "!**/format.test.js",
-]);
+const jsFilesToCheck = await fastGlob(["./tests/format/js/**/*.js"]);
 
+const counter = {
+  total: 0,
+  passed: 0,
+  failedToParseWontFix: 0,
+  failedToParseToBeFixed: 0,
+};
 const oxcParseErrors = [];
 const prettierErrors = [];
-for (const file of jsFiles.sort()) {
+for (const file of jsFilesToCheck) {
   const source = await readFile(file, "utf8");
 
   try {
-    const _doc = await Prettier.__debug.printToDoc(source, { parser: "oxc" });
-    console.log("✅", file);
+    await Prettier.__debug.printToDoc(source, { parser: "babel" });
+  } catch {
+    // Ignore files that fail to parse even with Babel at first
+    continue;
+  }
+
+  counter.total++;
+
+  try {
+    await Prettier.__debug.printToDoc(source, { parser: "oxc" });
   } catch (err) {
+    // Babel w/ plugins can parse but OXC can't
+    // Error string means OXC diagnostics
     if (typeof err === "string") {
       oxcParseErrors.push([file, err]);
-    } else {
-      prettierErrors.push([file, err]);
+      counter.failedToParseWontFix++;
+      continue;
     }
+
+    prettierErrors.push([file, err]);
+    counter.failedToParseToBeFixed++;
+    continue;
   }
+
+  // TODO: Diff babel doc with oxc doc
+  counter.passed++;
 }
 
 if (prettierErrors.length !== 0) {
@@ -33,6 +53,4 @@ if (prettierErrors.length !== 0) {
 }
 
 console.log();
-console.log(jsFiles.length, "files checked");
-console.log(oxcParseErrors.length, "files failed to parse with OXC");
-console.log(prettierErrors.length, "files failed to parse with Prettier");
+console.log("RESULTS:", counter);
