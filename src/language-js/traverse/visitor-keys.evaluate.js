@@ -51,7 +51,14 @@ const additionalVisitorKeys = {
   FunctionBody: ["statements"],
   StaticMemberExpression: ["object", "property"],
   ComputedMemberExpression: ["object", "property"],
+  PrivateFieldExpression: ["object", "field"],
   BindingProperty: ["key", "value"],
+  CatchParameter: ["pattern"],
+  ArrayAssignmentTarget: ["elements"],
+  ObjectAssignmentTarget: ["properties"],
+  PrivateInExpression: ["left", "right"],
+  AssignmentTargetPropertyProperty: ["name", "binding"],
+  AssignmentTargetWithDefault: ["binding", "init"],
 };
 
 const excludeKeys = {

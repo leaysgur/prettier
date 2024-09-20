@@ -26,22 +26,51 @@ function postprocess(ast, options) {
     comments.unshift(interpreter);
   }
 
+  // OXC AST > Babel AST
   if (parser === "oxc") {
     ast = visitNode(ast, (node) => {
       if (node.type === "StringLiteral")
         return { ...node, extra: { raw: `"${node.value}"` } };
       if (node.type === "NumericLiteral")
         return { ...node, extra: { raw: node.raw } };
+
       if (node.type === "FunctionBody")
         return { ...node, type: "BlockStatement", body: node.statements };
+      if (node.type === "CatchClause")
+        return { ...node, param: node.param.pattern };
+
+      if (node.type === "AssignmentTargetPropertyProperty")
+        return {
+          ...node,
+          type: "ObjectProperty",
+          key: node.name,
+          value: node.binding,
+        };
+      if (node.type === "AssignmentTargetWithDefault")
+        return {
+          ...node,
+          type: "AssignmentPattern",
+          left: node.binding,
+          right: node.init,
+        };
+
       if (
-        ["StaticMemberExpression", "ComputedMemberExpression"].includes(
-          node.type,
-        )
+        [
+          "StaticMemberExpression",
+          "ComputedMemberExpression",
+          "PrivateFieldExpression",
+        ].includes(node.type)
       )
         return { ...node, type: "MemberExpression" };
+      if (node.type === "PrivateInExpression")
+        return { ...node, type: "BinaryExpression" };
+
       if (node.type === "BindingProperty")
         return { ...node, type: "ObjectProperty" };
+      if (node.type === "ArrayAssignmentTarget")
+        return { ...node, type: "ArrayPattern" };
+      if (node.type === "ObjectAssignmentTarget")
+        return { ...node, type: "ObjectPattern" };
     });
   }
 

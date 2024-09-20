@@ -26,10 +26,10 @@ for (const file of jsFiles.sort()) {
 
 if (prettierErrors.length !== 0) {
   for (const [file, err] of prettierErrors) {
-    console.error(file);
-    console.error(err);
+    console.log();
+    console.log("💥", file);
+    console.log(err);
   }
-  console.error("👻 Failed to parse", prettierErrors.length, "files");
 }
 
 console.log();
