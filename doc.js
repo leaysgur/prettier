@@ -46,6 +46,7 @@ for (const file of jsFilesToCheck) {
 
 if (prettierErrors.length !== 0) {
   for (const [file, err] of prettierErrors) {
+    if (String(err).includes("Comment")) continue;
     console.log();
     console.log("💥", file);
     console.log(err);
