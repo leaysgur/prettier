@@ -6,6 +6,7 @@ import createParser from "./utils/create-parser.js";
 import getSourceType from "./utils/get-source-type.js";
 
 const parseOptions = {
+  sourceFilename: "all.jsx",
   preserveParens: true,
 };
 
@@ -15,7 +16,7 @@ function parseWithOptions(text, sourceType) {
     ...parseOptions,
   });
 
-  if (errors.length !== 0) throw new Error(errors[0]);
+  if (errors.length !== 0) throw { errors };
 
   const ast = JSON.parse(program);
   ast.comments = comments;
@@ -23,33 +24,10 @@ function parseWithOptions(text, sourceType) {
   return ast;
 }
 
-// TODO: Not sure
+// Errors do not have line, column.
+// But instead, error message contains them.
 function createParseError(error) {
-  let { message, line, column } = error;
-
-  const matches = message.match(
-    /^\[(?<line>\d+):(?<column>\d+)\]: (?<message>.*)$/u,
-  )?.groups;
-
-  if (matches) {
-    message = matches.message;
-
-    /* c8 ignore next 4 */
-    if (typeof line !== "number") {
-      line = Number(matches.line);
-      column = Number(matches.column);
-    }
-  }
-
-  /* c8 ignore next 3 */
-  if (typeof line !== "number") {
-    return error;
-  }
-
-  return createError(message, {
-    loc: { start: { line, column } },
-    cause: error,
-  });
+  return error;
 }
 
 function parse(text, options = {}) {
