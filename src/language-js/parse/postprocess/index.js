@@ -33,11 +33,15 @@ function postprocess(ast, options) {
         return { ...node, extra: { raw: `"${node.value}"` } };
       if (node.type === "NumericLiteral")
         return { ...node, extra: { raw: node.raw } };
+      if (node.type === "BigIntLiteral")
+        return { ...node, extra: { raw: node.raw } };
       if (node.type === "RegExpLiteral") return { ...node, ...node.regex };
+      if (node.type === "JSXText")
+        return { ...node, type: "JSXText", extra: { raw: node.value } };
 
       if (node.type === "FunctionBody")
         return { ...node, type: "BlockStatement", body: node.statements };
-      if (node.type === "CatchClause")
+      if (node.type === "CatchClause" && node.param)
         return { ...node, param: node.param.pattern };
 
       if (node.type === "AssignmentTargetPropertyProperty")
