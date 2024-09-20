@@ -15,8 +15,14 @@ const prettierErrors = [];
 for (const file of jsFilesToCheck) {
   const source = await readFile(file, "utf8");
 
+  let bblStr;
   try {
-    await Prettier.__debug.printToDoc(source, { parser: "babel" });
+    const bblDoc = await Prettier.__debug.printToDoc(source, {
+      parser: "babel",
+    });
+    bblStr = await Prettier.__debug.printDocToString(bblDoc, {
+      parser: "babel",
+    }).formatted;
   } catch {
     // Ignore files that fail to parse even with Babel at first
     continue;
@@ -24,8 +30,11 @@ for (const file of jsFilesToCheck) {
 
   counter.total++;
 
+  let oxcStr;
   try {
-    await Prettier.__debug.printToDoc(source, { parser: "oxc" });
+    const oxcDoc = await Prettier.__debug.printToDoc(source, { parser: "oxc" });
+    oxcStr = await Prettier.__debug.printDocToString(oxcDoc, { parser: "oxc" })
+      .formatted;
   } catch (err) {
     // Babel w/ plugins can parse but OXC can't
     // Error string means OXC diagnostics
@@ -40,8 +49,9 @@ for (const file of jsFilesToCheck) {
     continue;
   }
 
-  // TODO: Diff babel doc with oxc doc
-  counter.passed++;
+  if (bblStr === oxcStr) {
+    counter.passed++;
+  }
 }
 
 if (prettierErrors.length !== 0) {
@@ -54,4 +64,8 @@ if (prettierErrors.length !== 0) {
 }
 
 console.log();
-console.log("RESULTS:", counter);
+console.log(
+  "RESULTS:",
+  (counter.passed / counter.total * 100).toFixed(2) + "%",
+  counter,
+);
