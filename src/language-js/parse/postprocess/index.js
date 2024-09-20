@@ -26,6 +26,25 @@ function postprocess(ast, options) {
     comments.unshift(interpreter);
   }
 
+  if (parser === "oxc") {
+    ast = visitNode(ast, (node) => {
+      if (node.type === "StringLiteral")
+        return { ...node, extra: { raw: `"${node.value}"` } };
+      if (node.type === "NumericLiteral")
+        return { ...node, extra: { raw: node.raw } };
+      if (node.type === "FunctionBody")
+        return { ...node, type: "BlockStatement", body: node.statements };
+      if (
+        ["StaticMemberExpression", "ComputedMemberExpression"].includes(
+          node.type,
+        )
+      )
+        return { ...node, type: "MemberExpression" };
+      if (node.type === "BindingProperty")
+        return { ...node, type: "ObjectProperty" };
+    });
+  }
+
   // Keep Babel's non-standard ParenthesizedExpression nodes only if they have Closure-style type cast comments.
   if (parser === "babel") {
     const startOffsetsOfTypeCastedNodes = new Set();

@@ -45,6 +45,13 @@ const additionalVisitorKeys = {
   AsConstExpression: ["expression"],
   SatisfiesExpression: ["expression", "typeAnnotation"],
   TypeofTypeAnnotation: ["argument", "typeArguments"],
+
+  // Oxc
+  FormalParameters: ["params"],
+  FunctionBody: ["statements"],
+  StaticMemberExpression: ["object", "property"],
+  ComputedMemberExpression: ["object", "property"],
+  BindingProperty: ["key", "value"],
 };
 
 const excludeKeys = {
