@@ -72,6 +72,18 @@ function postprocess(ast, options) {
       if (node.type === "ObjectAssignmentTarget")
         return { ...node, type: "ObjectPattern" };
     });
+
+    // convert utf8 span to utf16
+    const utf8Text = new TextEncoder().encode(text);
+    const decoder = new TextDecoder();
+    ast = visitNode(ast, (node) => {
+      node.start = decoder.decode(utf8Text.slice(0, node.start)).length;
+      node.end = decoder.decode(utf8Text.slice(0, node.end)).length;
+    });
+    ast.comments.forEach((node) => {
+      node.start = decoder.decode(utf8Text.slice(0, node.start)).length;
+      node.end = decoder.decode(utf8Text.slice(0, node.end)).length;
+    });
   }
 
   // Keep Babel's non-standard ParenthesizedExpression nodes only if they have Closure-style type cast comments.
