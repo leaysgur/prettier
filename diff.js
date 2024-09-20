@@ -49,6 +49,7 @@ if (prettierErrors.length !== 0) {
     console.log();
     console.log("💥", file);
     console.log(err);
+    break;
   }
 }
 
