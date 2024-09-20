@@ -48,6 +48,7 @@ const additionalVisitorKeys = {
 
   // Oxc
   FormalParameters: ["params"],
+  FormalParameter: ["pattern"],
   FunctionBody: ["statements"],
   StaticMemberExpression: ["object", "property"],
   ComputedMemberExpression: ["object", "property"],

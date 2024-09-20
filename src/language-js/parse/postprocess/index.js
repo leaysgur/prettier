@@ -28,7 +28,9 @@ function postprocess(ast, options) {
 
   // OXC AST > Babel AST
   if (parser === "oxc") {
-    ast = visitNode(ast, (node) => {
+    const modify = (node) => {
+      if (!node) return node;
+
       if (node.type === "StringLiteral")
         return { ...node, extra: { raw: `"${node.value}"` } };
       if (node.type === "NumericLiteral")
@@ -40,43 +42,97 @@ function postprocess(ast, options) {
         return { ...node, type: "JSXText", extra: { raw: node.value } };
 
       if (node.type === "FunctionBody")
-        return { ...node, type: "BlockStatement", body: node.statements };
+        return {
+          ...node,
+          type: "BlockStatement",
+          body: node.statements.map((node) => modify(node)),
+        };
       if (node.type === "CatchClause" && node.param)
-        return { ...node, param: node.param.pattern };
+        return { ...node, param: modify(node.param.pattern) };
 
       if (node.type === "AssignmentTargetPropertyProperty")
         return {
           ...node,
           type: "ObjectProperty",
           key: node.name,
-          value: node.binding,
+          value: modify(node.binding),
         };
       if (node.type === "AssignmentTargetWithDefault")
         return {
           ...node,
           type: "AssignmentPattern",
-          left: node.binding,
+          left: modify(node.binding),
           right: node.init,
         };
 
+      if (node.type === "ConditionalExpression")
+        return {
+          ...node,
+          consequent: modify(node.consequent),
+          alternate: modify(node.alternate),
+        };
+      if (node.type === "CallExpression")
+        return {
+          ...node,
+          callee: modify(node.callee),
+          arguments: node.arguments.map((node) => modify(node)),
+        };
+      if (node.type === "BinaryExpression")
+        return {
+          ...node,
+          left: modify(node.left),
+          right: modify(node.right),
+        };
       if (
-        [
-          "StaticMemberExpression",
-          "ComputedMemberExpression",
-          "PrivateFieldExpression",
-        ].includes(node.type)
+        ["StaticMemberExpression", "PrivateFieldExpression"].includes(node.type)
       )
-        return { ...node, type: "MemberExpression" };
+        return {
+          ...node,
+          type: "MemberExpression",
+          object: modify(node.object),
+          property: modify(node.property),
+        };
+      if (node.type === "ComputedMemberExpression")
+        return {
+          ...node,
+          type: "MemberExpression",
+          object: modify(node.object),
+          property: modify(node.expression),
+          expression: undefined,
+        };
       if (node.type === "PrivateInExpression")
         return { ...node, type: "BinaryExpression" };
 
+      if (node.type === "ObjectProperty")
+        return {
+          ...node,
+          type: "ObjectMethod",
+          params: (node.value.params?.items ?? []).map((node) =>
+            modify(node.pattern),
+          ),
+          body: modify(node.value.body),
+          value: undefined,
+        };
+      if (node.type === "MethodDefinition")
+        return {
+          ...node,
+          type: "ClassMethod",
+          params: (node.value.params?.items ?? []).map((node) =>
+            modify(node.pattern),
+          ),
+          body: node.value.body,
+          value: undefined,
+        };
       if (node.type === "BindingProperty")
         return { ...node, type: "ObjectProperty" };
       if (node.type === "ArrayAssignmentTarget")
         return { ...node, type: "ArrayPattern" };
       if (node.type === "ObjectAssignmentTarget")
         return { ...node, type: "ObjectPattern" };
-    });
+
+      return node;
+    };
+    ast = visitNode(ast, (node) => modify(node));
 
     // convert utf8 span to utf16
     const utf8Text = new TextEncoder().encode(text);
@@ -92,7 +148,7 @@ function postprocess(ast, options) {
   }
 
   // Keep Babel's non-standard ParenthesizedExpression nodes only if they have Closure-style type cast comments.
-  if (parser === "babel") {
+  if (parser === "babel" || parser === "oxc") {
     const startOffsetsOfTypeCastedNodes = new Set();
 
     // Comments might be attached not directly to ParenthesizedExpression but to its ancestor.
