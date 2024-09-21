@@ -56,7 +56,6 @@ for (const file of jsFilesToCheck) {
 
 if (prettierErrors.length !== 0) {
   for (const [file, err] of prettierErrors) {
-    if (String(err).includes("Comment")) continue;
     console.log();
     console.log("💥", file);
     console.log(err);
@@ -65,7 +64,7 @@ if (prettierErrors.length !== 0) {
 
 console.log();
 console.log(
-  "RESULTS:",
-  (counter.passed / counter.total * 100).toFixed(2) + "%",
+  "🍀 JS FORMAT RESULTS:",
+  (counter.passed / counter.total * 100).toFixed(2) + "% compat with Babel",
   counter,
 );

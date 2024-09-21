@@ -46,9 +46,14 @@ function postprocess(ast, options) {
           ...node,
           type: "BlockStatement",
           body: node.statements.map((node) => modify(node)),
+          statements: undefined,
         };
       if (node.type === "CatchClause" && node.param)
         return { ...node, param: modify(node.param.pattern) };
+
+      if (node.type === "FormalParameters")
+        return node.items.map((node) => modify(node));
+      if (node.type === "FormalParameter") return modify(node.pattern);
 
       if (node.type === "AssignmentTargetPropertyProperty")
         return {
@@ -65,6 +70,12 @@ function postprocess(ast, options) {
           right: node.init,
         };
 
+      if (node.type === "ArrowFunctionExpression")
+        return {
+          ...node,
+          params: modify(node.params),
+          body: modify(node.body),
+        };
       if (node.type === "ConditionalExpression")
         return {
           ...node,
@@ -103,13 +114,27 @@ function postprocess(ast, options) {
       if (node.type === "PrivateInExpression")
         return { ...node, type: "BinaryExpression" };
 
+      if (node.type === "AssignmentPattern")
+        return {
+          ...node,
+          left: modify(node.left),
+          right: modify(node.right),
+        };
+      if (node.type === "ObjectPattern")
+        return {
+          ...node,
+          properties: node.properties.map((node) => ({
+            ...modify(node),
+            key: modify(node.key),
+            value: modify(node.value),
+            type: "ObjectProperty",
+          })),
+        };
       if (node.type === "ObjectProperty")
         return {
           ...node,
           type: "ObjectMethod",
-          params: (node.value.params?.items ?? []).map((node) =>
-            modify(node.pattern),
-          ),
+          params: (node.value.params?.items ?? []).map((node) => modify(node)),
           body: modify(node.value.body),
           value: undefined,
         };
@@ -117,10 +142,8 @@ function postprocess(ast, options) {
         return {
           ...node,
           type: "ClassMethod",
-          params: (node.value.params?.items ?? []).map((node) =>
-            modify(node.pattern),
-          ),
-          body: node.value.body,
+          params: (node.value.params?.items ?? []).map((node) => modify(node)),
+          body: modify(node.value.body),
           value: undefined,
         };
       if (node.type === "BindingProperty")
