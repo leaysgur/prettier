@@ -15,6 +15,15 @@ const prettierErrors = [];
 for (const file of jsFilesToCheck) {
   const source = await readFile(file, "utf8");
 
+  try {
+    await Prettier.__debug.printToDoc(source, {
+      parser: "meriyah",
+    });
+  } catch {
+    // Ignore files that expect to fail or babel only
+    continue;
+  }
+
   let bblStr;
   try {
     const bblDoc = await Prettier.__debug.printToDoc(source, {

@@ -1,10 +1,11 @@
 Prettier fork for experimental use of OXC AST
 
 ```
-🍀 JS FORMAT RESULTS: 88.52% compat with Babel {
-  total: 993,
-  passed: 879,
-  failedToParseWontFix: 93,
+// node ./doc.js
+🍀 JS FORMAT RESULTS: 97.00% compat with Babel {
+  total: 868,
+  passed: 842,
+  failedToParseWontFix: 5,
   failedToParseToBeFixed: 21
 }
 ```
